@@ -1,0 +1,5 @@
+*.o
+build/
+test
+*.txt
+.vscode/
