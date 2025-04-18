@@ -21,14 +21,14 @@ void take_measurements(measurement* arr, size_t n, volatile char* row) {
   uint32_t tsc_aux;
   for(int i = 0; i < N_MEASUREMENTS; i++) {
     _mm_clflush((void*)row);
-    _mm_mfence();
-
+    _mm_lfence();
+    
     uint64_t start = __rdtscp(&tsc_aux);
-    _mm_mfence();
+    _mm_lfence();
 
     *row;
 
-    _mm_mfence();
+    _mm_lfence();
     uint64_t end = __rdtscp(&tsc_aux);
 
     arr[i].duration = end - start;
