@@ -35,11 +35,11 @@ with open("out.txt", "r") as f:
         s += i - previous
         previous = i
     a = s / len(peaks)
-    print(f"average refresh interval seems to be {a / 1000} us, amounting to a general refresh interval of {a / 1000 * 8192 / 1000} ms")
+    print(f"average refresh interval seems to be {a} cycles")
 
 
     plt.plot(x, y)
     plt.hlines(average, x[0], x[-1], color="red")
-    plt.hlines(peak_median, x[0], x[-1], color="red")
+    plt.hlines(peak_median, x[0], x[-1], color="orange")
 
     plt.show()
