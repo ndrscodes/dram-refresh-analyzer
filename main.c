@@ -1,3 +1,4 @@
+#include <emmintrin.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -17,18 +18,20 @@ typedef struct {
 const size_t N_MEASUREMENTS = 300000;
 
 void take_measurements(measurement* arr, size_t n, volatile char* row) {
+  uint32_t tsc_aux;
   for(int i = 0; i < N_MEASUREMENTS; i++) {
     _mm_clflush((void*)row);
-    clock_gettime(CLOCK_MONOTONIC, &tstart);
+    _mm_mfence();
+
+    uint64_t start = __rdtscp(&tsc_aux);
     _mm_mfence();
 
     *row;
 
-    clock_gettime(CLOCK_MONOTONIC, &tend);
     _mm_mfence();
+    uint64_t end = __rdtscp(&tsc_aux);
 
-    uint64_t end = tend.tv_sec * 1000000000 + tend.tv_nsec;
-    arr[i].duration = end - (tstart.tv_sec * 1000000000 + tstart.tv_nsec);
+    arr[i].duration = end - start;
     arr[i].ts = end;
   }
 }
@@ -117,7 +120,7 @@ int main(int argc, char *argv[])
   }
   
   double peak_avg = avg_trefi(times, N_MEASUREMENTS);
-  printf("calculated refresh interval to be %f ns or %f us. The DRAM refresh interval should be %f ms\n", peak_avg, peak_avg / 1000, peak_avg / 1000 * 8192 / 1000);
+  printf("calculated refresh interval to be %f cycles", peak_avg);
 
   return EXIT_SUCCESS;
 }
