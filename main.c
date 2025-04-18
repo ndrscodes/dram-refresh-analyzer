@@ -20,9 +20,7 @@ const size_t N_MEASUREMENTS = 300000;
 void take_measurements(measurement* arr, size_t n, volatile char* row) {
   uint32_t tsc_aux;
   for(int i = 0; i < N_MEASUREMENTS; i++) {
-    _mm_clflush((void*)row);
-    _mm_lfence();
-    
+    _mm_mfence(); 
     uint64_t start = __rdtscp(&tsc_aux);
     _mm_lfence();
 
@@ -33,6 +31,8 @@ void take_measurements(measurement* arr, size_t n, volatile char* row) {
 
     arr[i].duration = end - start;
     arr[i].ts = end;
+    
+    _mm_clflush((void*)row);
   }
 }
 
