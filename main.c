@@ -7,7 +7,6 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <time.h>
-#include <x86intrin.h>
 #include <sched.h>
 
 struct timespec tstart={0,0}, tend={0,0};
