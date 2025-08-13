@@ -1,3 +1,4 @@
+#include <emmintrin.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,14 +19,13 @@ const size_t N_MEASUREMENTS = 300000;
 
 void take_measurements(measurement* arr, size_t n, volatile char* row) {
   for(int i = 0; i < N_MEASUREMENTS; i++) {
-    _mm_clflush((void*)row);
     clock_gettime(CLOCK_MONOTONIC, &tstart);
-    _mm_mfence();
+    asm volatile("dmb");
 
     *row;
 
+    asm volatile("dmb");
     clock_gettime(CLOCK_MONOTONIC, &tend);
-    _mm_mfence();
 
     uint64_t end = tend.tv_sec * 1000000000 + tend.tv_nsec;
     arr[i].duration = end - (tstart.tv_sec * 1000000000 + tstart.tv_nsec);
@@ -92,7 +92,7 @@ double_t avg_trefi(measurement times[], size_t n) {
 
 int main(int argc, char *argv[])
 {
-  void *ptr = mmap(NULL, 1, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+  void *ptr = mmap(NULL, 8192 * 2, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
   if(ptr == MAP_FAILED) {
     printf("map failed");
     return EXIT_FAILURE;
@@ -105,10 +105,13 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
+  void *ptr2 = ((char*)ptr) + 8192;
+  (*((char*)ptr2)) = 0x43;
+
   measurement times[N_MEASUREMENTS];
 
   //used as a preparation period for the OS to finish scheduling the program
-  take_measurements(times, N_MEASUREMENTS / 10, (volatile char*)ptr);
+  take_measurements(times, N_MEASUREMENTS / 10, (volatile char*)ptr2);
   sched_yield();
   take_measurements(times, N_MEASUREMENTS, (volatile char*)ptr);
 

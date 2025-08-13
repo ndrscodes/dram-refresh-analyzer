@@ -6,8 +6,8 @@ with open("out.txt", "r") as f:
     y = []
     for line in lines:
         vals = line.split(';')
-        data = int(vals[0])
-        timestamp = int(vals[1])
+        data = int(vals[0]) / 1000
+        timestamp = int(vals[1]) / 1000
         x.append(timestamp)
         y.append(data)
 
